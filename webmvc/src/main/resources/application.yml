@@ -1,0 +1,9 @@
+server:
+  port: ${PORT:5100}
+eshop:
+  catalog-api-base-url: ${CATALOG_API_BASE_URL:http://localhost:5101}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

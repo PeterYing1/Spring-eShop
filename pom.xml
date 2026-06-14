@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.eshop</groupId>
+    <artifactId>spring-eshop</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Spring eShop</name>
+    <description>Spring Boot conversion of eShopOnContainers.</description>
+
+    <modules>
+        <module>common</module>
+        <module>event-bus</module>
+        <module>integration-event-log</module>
+        <module>catalog-api</module>
+        <module>basket-api</module>
+        <module>ordering-api</module>
+        <module>ordering-backgroundtasks</module>
+        <module>ordering-notifications</module>
+        <module>identity-api</module>
+        <module>marketing-api</module>
+        <module>locations-api</module>
+        <module>payment-api</module>
+        <module>webhooks-api</module>
+        <module>shopping-aggregator</module>
+        <module>webmvc</module>
+        <module>webspa</module>
+        <module>webstatus</module>
+        <module>webhook-client</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring-grpc.version>1.0.0</spring-grpc.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.grpc</groupId>
+                <artifactId>spring-grpc-dependencies</artifactId>
+                <version>${spring-grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

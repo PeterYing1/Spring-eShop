@@ -1,0 +1,16 @@
+server:
+  port: ${PORT:5103}
+eshop:
+  basket:
+    redis:
+      key-format: "{buyerId}"
+      json-compatibility: dotnet-pascal-case-and-java-camel-case
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

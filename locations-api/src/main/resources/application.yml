@@ -1,0 +1,16 @@
+server:
+  port: ${PORT:5109}
+eshop:
+  locations:
+    seed:
+      enabled: ${ESHOP_LOCATIONS_SEED_ENABLED:auto}
+      resource: classpath:setup/locations-seed.json
+    mongo:
+      database: ${LOCATIONS_MONGO_DATABASE:LocationsDb}
+      locations-collection: Locations
+      user-location-collection: UserLocation
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

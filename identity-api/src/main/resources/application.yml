@@ -1,0 +1,18 @@
+server:
+  port: ${PORT:5105}
+spring:
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+eshop:
+  migrations:
+    enabled: ${ESHOP_MIGRATIONS_ENABLED:auto}
+    database: Microsoft.eShopOnContainers.Service.IdentityDb
+    url: ${IDENTITY_DATASOURCE_URL:${SPRING_DATASOURCE_URL:}}
+    user: ${IDENTITY_DATASOURCE_USERNAME:${SPRING_DATASOURCE_USERNAME:sa}}
+    password: ${IDENTITY_DATASOURCE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

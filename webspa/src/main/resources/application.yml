@@ -1,0 +1,7 @@
+server:
+  port: ${PORT:5104}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

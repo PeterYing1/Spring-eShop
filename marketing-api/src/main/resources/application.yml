@@ -1,0 +1,22 @@
+server:
+  port: ${PORT:5110}
+spring:
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+eshop:
+  migrations:
+    enabled: ${ESHOP_MIGRATIONS_ENABLED:auto}
+    database: Microsoft.eShopOnContainers.Services.MarketingDb
+    url: ${MARKETING_DATASOURCE_URL:${SPRING_DATASOURCE_URL:}}
+    user: ${MARKETING_DATASOURCE_USERNAME:${SPRING_DATASOURCE_USERNAME:sa}}
+    password: ${MARKETING_DATASOURCE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
+  marketing:
+    mongo:
+      database: ${MARKETING_MONGO_DATABASE:MarketingDb}
+      read-model-collection: MarketingReadDataModel
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

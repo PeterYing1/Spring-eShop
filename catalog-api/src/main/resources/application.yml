@@ -1,0 +1,22 @@
+server:
+  port: ${PORT:5101}
+spring:
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+eshop:
+  migrations:
+    enabled: ${ESHOP_MIGRATIONS_ENABLED:auto}
+    database: Microsoft.eShopOnContainers.Services.CatalogDb
+    url: ${CATALOG_DATASOURCE_URL:${SPRING_DATASOURCE_URL:}}
+    user: ${CATALOG_DATASOURCE_USERNAME:${SPRING_DATASOURCE_USERNAME:sa}}
+    password: ${CATALOG_DATASOURCE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

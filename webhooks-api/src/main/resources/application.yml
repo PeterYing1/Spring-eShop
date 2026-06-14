@@ -1,0 +1,18 @@
+server:
+  port: ${PORT:5113}
+spring:
+  flyway:
+    enabled: false
+    locations: classpath:db/migration
+eshop:
+  migrations:
+    enabled: ${ESHOP_MIGRATIONS_ENABLED:auto}
+    database: Microsoft.eShopOnContainers.Services.WebhooksDb
+    url: ${WEBHOOKS_DATASOURCE_URL:${SPRING_DATASOURCE_URL:}}
+    user: ${WEBHOOKS_DATASOURCE_USERNAME:${SPRING_DATASOURCE_USERNAME:sa}}
+    password: ${WEBHOOKS_DATASOURCE_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
