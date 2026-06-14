@@ -16,13 +16,15 @@ Scope:
 - Convert the complete server-side application stack to Spring Boot.
 - Preserve backend services, BFF aggregators, identity service, background workers, ordering notifications, health/status app, MVC web app, webhook client, and SPA hosting/client behavior.
 - Preserve public REST APIs, gRPC contracts, gateway routes, OIDC/OAuth behavior, event contracts, ports, health checks, and local Docker Compose workflows.
+- Preserve the .NET application's UI style, page structure, visual assets, user-facing text, navigation, and interaction patterns unless a framework change makes a pixel-identical implementation impossible.
+- Preserve the .NET application's logical data model, service-owned schemas, DTO fields, entity relationships, value objects, seed data, state machines, and event payload models.
 - Keep Envoy as the gateway layer.
 
 Out of scope:
 
 - Microsoft SignalR wire-protocol compatibility. The converted UI will use Spring WebSocket/STOMP at the same exposed hub path, `/hub/notificationhub`.
 - Rewriting the mobile Xamarin client. Its API and identity contracts must remain compatible.
-- Changing product features, event names, database ownership boundaries, or external URLs for cleanup only.
+- Changing product features, event names, database ownership boundaries, data model semantics, user-facing UI style, or external URLs for cleanup only.
 
 Target technology baseline:
 
@@ -71,10 +73,10 @@ Required modules:
 | `payment-api` | Service | Simulated payment event handler and payment success/failure publication. |
 | `webhooks-api` | Service | Webhook subscription REST API, SQL schema, event handlers, outbound webhook delivery. |
 | `shopping-aggregator` | Service | Web and mobile shopping aggregator behavior. Deploy as two containers with different service names/config if separate web/mobile images are required. |
-| `webmvc` | Service | Spring MVC + Thymeleaf replacement for WebMVC. |
-| `webspa` | Service | Spring Boot static host for the Angular SPA. Modernize only as needed for build support while preserving routes and behavior. |
-| `webstatus` | Service | Health/status UI replacement backed by Actuator health endpoints. |
-| `webhook-client` | Service | Spring MVC + Thymeleaf replacement for webhook demo client. |
+| `webmvc` | Service | Spring MVC + Thymeleaf replacement for WebMVC preserving Razor-view page structure and styling. |
+| `webspa` | Service | Spring Boot static host for the Angular SPA. Modernize only as needed for build support while preserving routes, style, and behavior. |
+| `webstatus` | Service | Health/status UI replacement backed by Actuator health endpoints, preserving dashboard style and check names. |
+| `webhook-client` | Service | Spring MVC + Thymeleaf replacement for webhook demo client preserving page structure and styling. |
 
 Recommended source layout per service:
 
@@ -134,7 +136,58 @@ Client registrations to preserve:
 
 Seed equivalent demo users and claims from the Identity service setup data. Password hashing can use Spring Security defaults if login behavior remains compatible for seeded users.
 
-### 4.3 Persistence
+### 4.3 Data Model Compatibility
+
+The Java conversion must keep the logical data model of the .NET application. "Logical data model" means the behaviorally visible model, not necessarily identical EF Core implementation details.
+
+Requirements:
+
+- Preserve service data ownership. Do not merge service databases or move entities across service boundaries.
+- Preserve entity names, field names, field meanings, nullability expectations, collection relationships, reference data ids, and state ids where they are externally observable or used by events/tests.
+- Preserve JSON DTO fields separately from persistence entities. If Java entities need different internal names, map them explicitly at the API boundary.
+- Preserve SQL table intent and relationships for catalog, ordering, marketing, identity, webhooks, and integration event logs. Table names may follow Java conventions only when no migration, test, query, or cross-service contract depends on the original name.
+- Preserve Mongo document shapes for locations and marketing user-location data so existing seed data and event handlers map cleanly.
+- Preserve Redis basket JSON shape for `CustomerBasket` and `BasketItem`.
+- Preserve seed data values and stable ids for catalog brands/types/items, ordering statuses/card types, locations, campaigns/rules, identity clients/scopes/users, and webhook types.
+- Preserve domain value objects and enumerations: ordering `Address`, `CardType`, `OrderStatus`, `PaymentMethod`; catalog stock fields; marketing rules; location point/polygon models; webhook subscription types.
+- Preserve domain state machines and invariants, especially catalog stock changes and ordering status transitions.
+
+Model mapping guidance:
+
+| .NET model concept | Spring implementation requirement |
+| --- | --- |
+| EF Core aggregate/entity | JPA entity or JDBC-mapped record with equivalent persisted fields and domain behavior. |
+| EF Core owned value object | Embeddable JPA value object or explicit columns with a domain value object mapper. |
+| EF Core migrations | Flyway or Liquibase migrations that reproduce required schema and seed data. |
+| DTO/view model | Java DTO/record preserving public JSON fields and validation. |
+| Enumeration class with stable ids | Java enum or class preserving numeric ids and names. |
+| Integration event class | Java event DTO preserving event name and payload fields. |
+| Redis document | JSON-serialized Java DTO preserving property names and collection structure. |
+| Mongo document | Spring Data Mongo document preserving stored field names and nested structures. |
+
+### 4.4 UI Style Compatibility
+
+The Java conversion must keep the UI style of the .NET application. The goal is that a user moving from the source app to the Spring version recognizes the same experience.
+
+Requirements:
+
+- Preserve page-level layout, navigation hierarchy, header/footer behavior, catalog grid/list presentation, cart/order/campaign workflows, webhook client pages, and health/status dashboard structure.
+- Reuse the source visual assets where legally and technically available, including product pictures, campaign pictures, logo assets, CSS-derived spacing/color/type treatments, and iconography.
+- Preserve user-facing labels, button text, validation messages, empty states, and route names unless a text change is required by the Spring/OIDC implementation.
+- Preserve responsive behavior for WebMVC, WebSPA, WebStatus, and Webhook Client.
+- Preserve the Angular SPA route structure and feature layout even if dependencies are modernized.
+- Preserve server-rendered WebMVC and Webhook Client page style using Thymeleaf templates that mirror the Razor views' structure and CSS classes.
+- Preserve WebStatus health check names and dashboard grouping.
+- Add visual regression coverage for key screens at desktop and mobile widths.
+
+Key screens for style parity:
+
+- WebMVC catalog, cart, checkout, order history/detail, campaign list/detail, order management, login/logout.
+- WebSPA catalog, basket, new order, order list/detail, campaigns list/detail, identity header state.
+- Webhook Client index, webhook registration, webhook list, received webhook view, login/logout.
+- WebStatus health dashboard and `/Config` page.
+
+### 4.5 Persistence
 
 Keep the original ownership model:
 
@@ -150,7 +203,7 @@ Keep the original ownership model:
 
 Use schema migrations in every database-owning service. Seed data must reproduce original catalog data, brands, types, locations, ordering card types/status values, campaigns, and identity clients/users.
 
-### 4.4 Event Bus and Outbox
+### 4.6 Event Bus and Outbox
 
 Implement `event-bus` with:
 
@@ -171,7 +224,7 @@ Implement `integration-event-log` with:
 
 Azure Service Bus support can be deferred behind the same interface. RabbitMQ is required for the first implementation because local compose uses it.
 
-### 4.5 Health, Logging, and Observability
+### 4.7 Health, Logging, and Observability
 
 Every service must expose:
 
@@ -598,7 +651,7 @@ Responsibilities to preserve:
 - Server-rendered shopping web app.
 - Login/logout through identity service.
 - Catalog browsing, basket management, checkout, order detail/history, campaigns, user location updates, order management actions.
-- Existing public routes and visual behavior where practical.
+- Existing public routes, page layouts, CSS class semantics, visual assets, user-facing text, and interaction behavior.
 
 Spring implementation:
 
@@ -607,6 +660,8 @@ Spring implementation:
 - Store access/refresh tokens in the authenticated session.
 - Add bearer token to downstream gateway requests.
 - Add `x-requestid` to order-changing requests.
+- Port Razor views to Thymeleaf by preserving the original view hierarchy, partial/component boundaries where useful, form layout, validation display, catalog cards, cart/order tables, header identity state, and responsive behavior.
+- Reuse source CSS and static assets first. Convert CSS only where framework or asset-pipeline differences require it, and document any unavoidable visual differences.
 - Preserve app settings:
   `PurchaseUrl`, `MarketingUrl`, `IdentityUrl`, `CallBackUrl`, `SignalrHubUrl`, `IdentityUrlHC`, `UseCustomizationData`, `UseLoadTest`.
 
@@ -630,12 +685,13 @@ Responsibilities to preserve:
 - OIDC login behavior.
 - Catalog, basket, order, campaign, and notification flows.
 - Static web app hosted from container port `5104`.
+- Existing SPA visual design, component layout, navigation, CSS styling, product/campaign imagery, and user-facing text.
 
 Spring implementation:
 
 - Spring Boot service serves built SPA assets.
 - Keep SPA route fallback to `index.html`.
-- Modernize Angular dependencies only as needed to build and run safely, but preserve UI routes and service behavior.
+- Modernize Angular dependencies only as needed to build and run safely, but preserve UI routes, component structure, CSS style, and service behavior.
 - Replace SignalR client usage with STOMP/WebSocket client pointed at `/hub/notificationhub`.
 - Preserve config endpoint or static config equivalent for:
   `IdentityUrl`, `PurchaseUrl`, `MarketingUrl`, `SignalrHubUrl`, and health URLs.
@@ -649,6 +705,7 @@ Responsibilities to preserve:
 - Redirect root to health UI.
 - Expose `/Config` view of configured health checks.
 - Monitor all services listed in compose.
+- Preserve the source health dashboard style, health check names, status grouping, and configuration display.
 
 Spring implementation:
 
@@ -657,6 +714,7 @@ Spring implementation:
   `/Config` renders configured health checks.
 - Periodic health polling using WebClient or server-side page refresh.
 - Read configuration compatible with `HealthChecksUI__HealthChecks__{n}__Name` and `HealthChecksUI__HealthChecks__{n}__Uri` environment variables or provide a documented Spring relaxed-binding mapping.
+- Preserve the original dashboard's visual hierarchy and labels while replacing the underlying health-check implementation with Actuator-backed checks.
 
 ### 5.15 Webhook Client
 
@@ -669,6 +727,7 @@ Responsibilities to preserve:
 - Receive webhook callbacks.
 - Show received webhook list from in-memory repository.
 - Validate callback token when configured.
+- Preserve the source webhook client page layout, forms, navigation, tables/lists, labels, and validation display.
 
 Spring implementation:
 
@@ -677,6 +736,7 @@ Spring implementation:
 - In-memory repository for received hooks.
 - `POST /webhook-received` accepts webhook payload and token.
 - Register page posts subscription request to `webhooks-api`.
+- Port Razor pages to Thymeleaf while preserving form fields, callback URL display, subscription list, received webhook list, CSS classes, and source visual assets.
 - Preserve settings:
   `Token`, `IdentityUrl`, `CallBackUrl`, `WebhooksUrl`, `SelfUrl`, `ValidateToken`.
 
@@ -867,6 +927,7 @@ Required unit coverage:
 - Marketing campaign/rule mapping.
 - Webhook subscription validation and grant URL validation.
 - Event name mapping and serialization.
+- Data model mappers preserve DTO fields, stable ids, value objects, entity relationships, and persisted document shapes.
 
 ### 9.2 Contract Tests
 
@@ -880,6 +941,13 @@ REST contract coverage:
 - JSON property names and data types.
 - Pagination shape: `pageIndex`, `pageSize`, `count`, `data`.
 - `x-requestid` behavior for idempotent command endpoints.
+- Public data model compatibility, including field names, nullability expectations, stable reference ids, and event payload shapes.
+
+UI style contract coverage:
+
+- Snapshot or visual-regression tests for the key screens listed in section 4.4.
+- DOM structure checks for critical forms, tables, navigation links, identity header state, validation messages, and health/status rows.
+- Asset presence checks for logos, product images, campaign images, and stylesheet bundles.
 
 gRPC contract coverage:
 
@@ -933,6 +1001,7 @@ Run against Docker Compose:
 8. Cancel an eligible order and ship a paid order through order management.
 9. Create/update user location and verify personalized campaign list changes.
 10. Register a webhook, trigger a subscribed event, and verify webhook client receives it.
+11. Compare WebMVC, WebSPA, WebStatus, and Webhook Client screens against source screenshots or approved baselines at desktop and mobile widths.
 
 Migration acceptance:
 
@@ -968,10 +1037,12 @@ Each phase must include tests before moving to the next phase. Do not wait until
 | IdentityServer to Spring Authorization Server differences | Preserve OIDC/OAuth client behavior and add compatibility endpoints where existing clients require IdentityServer-style paths. |
 | SignalR protocol not available natively in Spring | Use Spring WebSocket/STOMP at `/hub/notificationhub`; converted UI clients use STOMP. |
 | Event payload casing drift | Add serialization contract tests against captured .NET payload examples. |
+| Data model drift during Java mapping | Keep explicit mapper tests for API DTOs, persistence entities, Mongo documents, Redis basket JSON, seed data ids, and integration events. |
+| UI style drift during template/client conversion | Reuse source CSS/assets first and add visual regression tests for key screens before changing templates or SPA components. |
 | EF Core private-field aggregate mapping differences | Keep domain behavior in Java methods and map JPA carefully with field access where needed. |
 | SQL Server schema drift | Use migrations and seed scripts reviewed against source migrations and seed files. |
 | Docker issuer URL mismatch | Support internal/external identity URLs and document the issuer used by resource servers. |
-| SPA dependency age | Modernize only enough for supported builds and security while preserving route and API behavior. |
+| SPA dependency age | Modernize only enough for supported builds and security while preserving route, API, component, and visual behavior. |
 
 ## 12. Done Definition
 
@@ -981,6 +1052,8 @@ The conversion is complete when:
 - Docker Compose starts the complete Java-based application stack.
 - WebMVC, WebSPA, WebStatus, and Webhook Client are reachable on the original ports.
 - Public REST and gRPC contract tests pass.
+- Data model compatibility tests pass for DTOs, persisted entities/documents, seed data, event payloads, and ordering/catalog domain invariants.
+- Visual regression and DOM contract tests confirm WebMVC, WebSPA, WebStatus, and Webhook Client preserve the source UI style within documented framework constraints.
 - OIDC/OAuth login works for MVC, SPA, mobile-compatible client configuration, Swagger clients, and webhook client.
 - The checkout/order saga works through RabbitMQ with SQL outbox guarantees.
 - Catalog, basket, ordering, marketing, locations, payment, webhooks, notifications, and status features match the source behavior.
