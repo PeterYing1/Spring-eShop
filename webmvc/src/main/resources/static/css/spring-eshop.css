@@ -334,7 +334,7 @@ body {
     border-bottom: 1px solid #e2e6ee;
     display: flex;
     justify-content: space-between;
-    padding: 2rem 3.6rem;
+    padding: .98rem 3.6rem;
 }
 
 .esh-shop-header p {
@@ -342,7 +342,7 @@ body {
     font-size: .9rem;
     font-weight: 700;
     letter-spacing: .08em;
-    margin: 0 0 .8rem;
+    margin: 0 0 .39rem;
 }
 
 .esh-shop-brand {
@@ -381,7 +381,7 @@ body {
 }
 
 .esh-shop-main {
-    padding: 2.4rem 3.6rem;
+    padding: 1.19rem 3.6rem 2.4rem;
 }
 
 .esh-catalog-title-row,
@@ -389,7 +389,7 @@ body {
     align-items: center;
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1.25rem;
+    margin-bottom: .61rem;
 }
 
 .esh-catalog-title-row h1,
